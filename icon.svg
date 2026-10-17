@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Chat background">
+  <defs>
+    <clipPath id="frame"><rect width="64" height="64" rx="14"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111c3a"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="64" height="64" fill="url(#sky)"/>
+    <circle cx="45" cy="20" r="7" fill="#fbbf24"/>
+    <path d="M0 44 L17 27 L29 39 L37 31 L64 55 L64 64 L0 64 Z" fill="#38bdf8" opacity="0.45"/>
+    <path d="M0 52 L13 41 L25 51 L33 45 L64 64 L0 64 Z" fill="#0ea5e9" opacity="0.75"/>
+    <rect y="48" width="64" height="16" fill="#e2e8f0" opacity="0.16"/>
+  </g>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" fill="none" stroke="#94a3b8" stroke-opacity="0.35"/>
+</svg>

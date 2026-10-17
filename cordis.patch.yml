@@ -1,0 +1,4 @@
+# 作为组合包（bundle）安装时由 DSH 加载；插件在设置 → 背景里提供界面。
+- insert:
+    - id: chat-background
+      name: 'dsh-plugin-chat-background'
