@@ -36,6 +36,12 @@ window.__ModuleLoader__.load({
        * 只有一个整窗值 —— 唯一能"盖住壁纸又被内容盖住"的层只有 body 自己的背景。
        */
       wallpaperBrightness: 0.55,
+      /**
+       * 次要文字改用主色：壁纸下 --dsw-alias-label-secondary / -tertiary 这两级浅灰
+       * 几乎不可见（侧栏时间、元信息、轨迹标签、消息操作图标都会糊掉）。
+       * 打开时把这两级映射到主文字色；关掉则恢复主题原本的层次。
+       */
+      labelBoost: true,
       /** 用量浮窗总开关（收起态按钮 + 展开浮窗）。 */
       usagePanel: true,
       /** 是否隐藏输入框下方原有的统计行（避免与其重复）。 */
@@ -104,6 +110,7 @@ window.__ModuleLoader__.load({
       return {
         enabled: input.enabled !== false,
         wallpaperBrightness: clamp01(brightness),
+        labelBoost: input.labelBoost !== false,
         usagePanel: input.usagePanel !== false,
         usageHideBuiltin: input.usageHideBuiltin !== false,
         usageButtonText:
@@ -415,9 +422,19 @@ body[data-dsh-bg="ready"] [data-menu-material]{
   --dsw-menu-surface-fill:rgb(var(--dsh-bg-card-rgb, 249, 249, 249));
   --dsw-menu-backdrop-filter:none;
 }
-body[data-dsh-bg="ready"] [data-menu-material]{
-  --dsw-menu-surface-fill:rgb(var(--dsh-bg-card-rgb, 249, 249, 249));
-  --dsw-menu-backdrop-filter:none;
+/* ── 次要文字改用主色 ────────────────────────────────────────────────────────
+   主题把 --dsw-alias-label-secondary / -tertiary 声明在 **body** 上，分别是
+   neutral-700 / neutral-600 的浅灰。铺上壁纸后，侧栏时间、元信息、轨迹标签、
+   消息操作图标这些低对比文字几乎看不见（用户实拍反馈：深色壁纸下完全糊掉）。
+   做法：只在壁纸就绪且开关打开时，把这两个令牌直接映射到主文字色
+   --dsw-alias-label-primary（浅色主题近黑、深色主题近白），主题切换自动跟随。
+   选择器前面加 html 提高特异性，压过主题自己的 body 规则，不依赖样式表顺序。
+   刻意不用 color-mix 做比例插值：这两个令牌本身就声明在 body 上，
+   在 body 上写"按比例混回自己"会成环，整条声明失效。
+   注意：这段注释里不能出现反引号，CSS 在模板字符串里。 */
+html body[data-dsh-bg-label="on"]{
+  --dsw-alias-label-secondary:var(--dsw-alias-label-primary);
+  --dsw-alias-label-tertiary:var(--dsw-alias-label-primary);
 }
 /* ── 用量浮窗 ────────────────────────────────────────────────────────────────
    收起态是一枚淡色小按钮（写实时总用量），展开态是一块磨砂卡片，贴着对话区右侧、
@@ -1199,8 +1216,12 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
       if (bodyNode !== null) {
         if (settings.enabled && currentImageUrl !== null) {
           bodyNode.setAttribute('data-dsh-bg', painted ? 'ready' : 'pending');
+          // 次要文字改用主色：壁纸真的画上去了才开，否则白白改掉主题层次
+          if (painted && settings.labelBoost) bodyNode.setAttribute('data-dsh-bg-label', 'on');
+          else bodyNode.removeAttribute('data-dsh-bg-label');
         } else {
           bodyNode.removeAttribute('data-dsh-bg');
+          bodyNode.removeAttribute('data-dsh-bg-label');
         }
       }
       refreshStyleChecks();
@@ -2220,6 +2241,13 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
           onChange: (value) => update({ wallpaperBrightness: value / 100 }),
           format: (value) => Math.round(value) + '%',
         }),
+        // 次要文字改用主色：壁纸下二级/三级文字几乎看不见，一键提到主文字色
+        h(ToggleRow, {
+          title: t('labelBoost'),
+          description: t('labelBoostDesc'),
+          checked: settings.labelBoost,
+          onChange: (next) => update({ labelBoost: next }),
+        }),
         h(
           'div',
           { className: '_dsbg_buttonRow' },
@@ -2775,6 +2803,8 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
       posX: '水平位置',
       posY: '垂直位置',
       wallpaperBrightness: '壁纸亮度',
+      labelBoost: '次要文字改用主色',
+      labelBoostDesc: '壁纸下，侧栏时间、元信息、轨迹标签、消息操作图标这些浅灰文字几乎看不见。打开后把它们提到主文字色（浅色主题近黑、深色主题近白），关掉则恢复主题原本的层次。',
       usagePanel: '用量浮窗',
       usagePanelDesc: '把输入框下方那条统计做成右侧一枚小按钮（写实时总用量），点击展开为浮窗显示轮次、步骤、速度、缓存与上下文；点浮窗外部或按 Esc 收起。数据走内置投影，随会话实时更新。',
       usageHideBuiltin: '隐藏内置状态行',
@@ -2854,6 +2884,8 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
       posX: 'Horizontal position',
       posY: 'Vertical position',
       wallpaperBrightness: 'Wallpaper brightness',
+      labelBoost: 'Promote secondary text to primary',
+      labelBoostDesc: 'On a wallpaper, the pale grey text - sidebar timestamps, metadata, the trajectory tab, message action icons - is nearly invisible. This raises those two levels to the primary label colour (near black in the light theme, near white in the dark one). Switch it off to restore the original hierarchy.',
       usagePanel: 'Usage popover',
       usagePanelDesc: 'Turns the statistics line under the composer into a small button on the right (showing live total usage); clicking expands a popover with turns, steps, speed, cache and context. Clicking outside or pressing Esc collapses it. Figures come from built-in projections and update live.',
       usageHideBuiltin: 'Hide the built-in stats line',
