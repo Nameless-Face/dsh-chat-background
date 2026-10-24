@@ -3,8 +3,8 @@
 用一张**本地图片**作为 DeepSeek Harness 对话窗口的背景。
 Use a **local image** as the DeepSeek Harness chat window background.
 
-> 状态 / Status: **1.0.0** — 面向具体 DSH 桌面版（开发时 `0.2.0-rc.2`）实现，依赖该版本的主题令牌与插槽。
-> Built against a specific DSH desktop build (`0.2.0-rc.2` at the time of writing); it relies on that build's theme tokens and slots.
+> 状态 / Status: **1.2.0** — 面向具体 DSH 桌面版（已验证 `0.2.0-rc.2` 与 `0.2.1-rc.3`），依赖该版本的主题令牌与插槽。
+> Verified against DSH desktop `0.2.0-rc.2` and `0.2.1-rc.3`; it relies on those builds' theme tokens and slots.
 
 ---
 

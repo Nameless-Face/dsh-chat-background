@@ -557,6 +557,34 @@ body[data-dsh-bg="ready"]{
   --dsw-alias-bg-base:transparent!important;
   --dsw-specific-sidebar-fill:transparent!important;
 }
+
+/* 两个**吸顶**元素（折叠/压缩条、消息横幅）：它们的底色直接取自 bg-base，
+   作用是挡住从下方滚上来的内容。全局令牌透明会让它们彻底没有底色 ——
+   现象就是「整条透明、指针移上去更明显」。只给这两类还原令牌值，
+   其余组件一律不动，避免又出现上一次那种整页发白。
+   类名用子串匹配：DSH 的哈希前缀每次构建都会变。 */
+body[data-dsh-bg="ready"] [class*="_compactionButton"],
+body[data-dsh-bg="ready"] [class*="_bannerWrap"]{
+  --dsw-alias-bg-base:var(--dsw-static-neutral-bluish-00);
+}
+
+/* 「继续执行目标」这类回合触发条（结构：*_root > button*_header）。
+   内置样式是 background: markdown-code-block（实色）；
+   而 :hover 换成 --dsw-alias-interactive-bg-hover —— 那是一层 8% 白，
+   设计前提是底下有实色底，所以看起来只是"变亮一点"。
+   但壁纸是照片，8% 白压上去等于没有，于是整行在悬停瞬间"透掉"。
+   这里改成：底色固定保留，悬停改为同底色掺一点前景色的实色提亮。
+   用 :has(> *_header) 精确定位这一族，不误伤其它 *_root。 */
+body[data-dsh-bg="ready"] [class*="_root"]:has(> [class*="_header"]){
+  background-color:var(--dsw-alias-markdown-code-block)!important;
+}
+body[data-dsh-bg="ready"] [class*="_root"]:has(> [class*="_header"]):hover{
+  background-color:color-mix(in srgb, var(--dsw-alias-markdown-code-block) 92%, var(--dsw-alias-label-primary))!important;
+}
+body[data-dsh-bg="ready"][data-ds-dark-theme] [class*="_compactionButton"],
+body[data-dsh-bg="ready"][data-ds-dark-theme] [class*="_bannerWrap"]{
+  --dsw-alias-bg-base:var(--dsw-static-neutral-bluish-950);
+}
 /* 输入框下方的状态行（轮/步、tok/s、总 tok、缓存命中、上下文占用）：单独铺一层纱。
    为什么需要：这几粒 12px 小字原本浮在实色输入框卡片上（对比稳定），
    卡片透明后它们直接压在壁纸/白纱上，对比随壁纸明暗浮动 —— 这是我们改动造成的回归。
@@ -679,10 +707,34 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
     /**
      * 真正的「列」容器。
      */
+    /**
+     * 按类名后缀找元素。DSH 的 CSS 模块哈希前缀每次构建都会变
+     * （0.2.0-rc.2 是 BynINW_，0.2.1-rc.3 是 mP3x-q_），写死整串类名一旦对不上，
+     * 就会静默退回几何兜底，进而算错浮窗位置、把错误的元素清成透明。
+     * 这里用「属性子串 + 类名以 _后缀 结尾」双重判断，跨版本稳定。
+     */
+    function byClassSuffix(suffix) {
+      try {
+        const tail = new RegExp('_' + suffix + '$');
+        const list = document.querySelectorAll('[class*="_' + suffix + '"]');
+        for (let i = 0; i < list.length; i += 1) {
+          const node = list[i];
+          if (!(node instanceof HTMLElement)) continue;
+          const names = node.classList;
+          for (let k = 0; k < names.length; k += 1) {
+            if (tail.test(names[k])) return node;
+          }
+        }
+      } catch {
+        /* 选择器异常时退回几何兜底 */
+      }
+      return null;
+    }
+
     function resolveColumns() {
       const columns = {
-        sidebar: document.querySelector('.BynINW_sidebarCol'),
-        chat: document.querySelector('.BynINW_centerCol'),
+        sidebar: byClassSuffix('sidebarCol'),
+        chat: byClassSuffix('centerCol'),
       };
       let via = 'class';
       if (columns.sidebar === null || columns.chat === null) {
@@ -895,7 +947,7 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
 
     /**
      * 按钮允许到达的最高位置（避开窗口标题栏）。
-     * 标题栏那条拖动区是 .BynINW_frame::before **伪元素**，量元素几何拿不到它 ——
+     * 标题栏那条拖动区是 布局 frame 类的 ::before **伪元素**，量元素几何拿不到它 ——
      * 早先 querySelector 找窗框、找不到就回落 8px，等于没修（用户实测按钮停在 y=8）。
      * 现在读 --dsh-windows-titlebar-height，读不到用本常量兜底。
      */
@@ -2620,8 +2672,8 @@ body[data-dsh-bg] [data-composer-stats] [class*="_pill"]{
                 ' w=' + Math.round(rect.width) + ' h=' + Math.round(rect.height),
           );
         };
-        probe('侧栏列 .BynINW_sidebarCol', '.BynINW_sidebarCol');
-        probe('会话列 .BynINW_centerCol', '.BynINW_centerCol');
+        probe('侧栏列 [hash]_sidebarCol', '[class*="_sidebarCol"]');
+        probe('会话列 [hash]_centerCol', '[class*="_centerCol"]');
         probe('输入框 [data-composer-card]', '[data-composer-card]');
         probe('用量按钮', '._dsbg_usageButton');
         probe('压暗层', '._dsbg_veil');
