@@ -388,7 +388,12 @@ body[data-dsh-bg-text="on"] :is([class*="_markdown"], [class*="_bubble"], [class
   padding: 4px 10px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  backdrop-filter: blur(var(--dsh-bg-text-blur));
+    /* 这里刻意**不用** backdrop-filter。
+       blur(0px) 也不是空操作：只要声明存在，浏览器就给每个段落/标题/列表项
+       单独提升合成层（backdrop root）。流式输出滚动时这些层反复重建，
+       某一帧取不到 backdrop 就"掉层" —— 底色纱消失、壁纸透出，
+       表现为正文区约 0.2 秒的白闪（实测亮度 180→196，侧栏不受影响）。
+       可读性靠底色浓度即可，不需要模糊。 */
 }
 /* 删去"每一行自己那层更浓的纱" = 内置给行内代码画的**实色底 + 边框**。
    置为透明后行内代码就落在段底之上、颜色与段落一致；再补一条极淡描边，
