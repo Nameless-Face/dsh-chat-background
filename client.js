@@ -577,6 +577,10 @@ body[data-dsh-bg="ready"] [class*="_bannerWrap"]{
    用 :has(> *_header) 精确定位这一族，不误伤其它 *_root。 */
 body[data-dsh-bg="ready"] [class*="_root"]:has(> [class*="_header"]){
   background-color:var(--dsw-alias-markdown-code-block)!important;
+  /* 圆角：这类行卡片（步骤状态、"继续执行目标"）内置是 0 圆角，
+     压在壁纸上像一块硬边的白矩形。跟 DSH 自己的 radius-md 对齐。 */
+  border-radius:var(--dsw-radius-sm,8px)!important;
+  overflow:hidden;
 }
 body[data-dsh-bg="ready"] [class*="_root"]:has(> [class*="_header"]):hover{
   background-color:color-mix(in srgb, var(--dsw-alias-markdown-code-block) 92%, var(--dsw-alias-label-primary))!important;
